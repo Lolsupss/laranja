@@ -1,5 +1,13 @@
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "Detector de NPCs", HidePremium = true})
+-- Carrega o script Orion
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Lolsupss/Orion-library-do-eu/main/Purplessss'))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "S333 Menu",
+    HidePremium = false,
+    IntroText = "S333 Menu",
+    SaveConfig = true,
+    ConfigFolder = "S333 Menu"
+})
 
 -- Definições de cor
 local targetColor = Color3.fromRGB(255, 85, 0) -- Cor alvo (laranja)
@@ -19,7 +27,7 @@ end
 -- Função para detectar NPCs
 local function detectNpcs()
     local detectedNpcs = {}
-    
+
     -- Percorre todos os NPCs em `workspace["Npc's"]`
     for _, npc in pairs(game:GetService("Workspace")["Npc's"]:GetChildren()) do
         if checkNpcColor(npc) then
@@ -52,5 +60,5 @@ Window:MakeButton({
     end
 })
 
--- Exibir a janela
+-- Inicializa a interface do Orion
 OrionLib:Init()
