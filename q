@@ -1,6 +1,8 @@
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local Window = OrionLib:MakeWindow({Name = "Detector de NPCs", HidePremium = true})
 
-local targetColor = Color3.fromRGB(255, 85, 0) -- Define a cor alvo (laranja)
+-- Definições de cor
+local targetColor = Color3.fromRGB(255, 85, 0) -- Cor alvo (laranja)
 
 -- Função para verificar se um NPC possui o `QuestTag.NameTitle` com a cor especificada
 local function checkNpcColor(npc)
@@ -14,23 +16,41 @@ local function checkNpcColor(npc)
     return false
 end
 
--- Cria uma lista para armazenar NPCs detectados
-local detectedNpcs = {}
+-- Função para detectar NPCs
+local function detectNpcs()
+    local detectedNpcs = {}
+    
+    -- Percorre todos os NPCs em `workspace["Npc's"]`
+    for _, npc in pairs(game:GetService("Workspace")["Npc's"]:GetChildren()) do
+        if checkNpcColor(npc) then
+            table.insert(detectedNpcs, npc)
+            print("NPC com cor laranja detectado: " .. npc.Name)
+        end
+    end
 
--- Percorre todos os NPCs em `workspace["Npc's"]`
-for _, npc in pairs(game:GetService("Workspace")["Npc's"]:GetChildren()) do
-    if checkNpcColor(npc) then
-        table.insert(detectedNpcs, npc)
-        print("NPC com cor laranja detectado: " .. npc.Name)
+    -- Notificação
+    if #detectedNpcs > 0 then
+        OrionLib:MakeNotification({
+            Name = "NPCs Detectados",
+            Content = "Foram encontrados " .. #detectedNpcs .. " NPCs com a cor laranja.",
+            Time = 5
+        })
+    else
+        OrionLib:MakeNotification({
+            Name = "Nenhum NPC Encontrado",
+            Content = "Nenhum NPC com a cor laranja foi detectado.",
+            Time = 5
+        })
     end
 end
 
--- Se desejar, você pode fazer algo com a lista de NPCs detectados
-if #detectedNpcs > 0 then
-    -- Por exemplo, exibir um aviso na interface do Orion
-    OrionLib:MakeNotification({
-        Name = "NPCs Detectados",
-        Content = "Foram encontrados " .. #detectedNpcs .. " NPCs com a cor laranja.",
-        Time = 5
-    })
-end
+-- Criação do botão para detectar NPCs
+Window:MakeButton({
+    Name = "Detectar NPCs Laranjas",
+    Callback = function()
+        detectNpcs()
+    end
+})
+
+-- Exibir a janela
+OrionLib:Init()
