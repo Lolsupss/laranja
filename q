@@ -1,138 +1,36 @@
--- Requer a Orion Library
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
--- Configuração da interface
-local Window = OrionLib:MakeWindow({
-    Name = "NPC Teleport Menu",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "OrionNPC"
-})
+local targetColor = Color3.fromRGB(255, 85, 0) -- Define a cor alvo (laranja)
 
--- Aba principal
-local MainTab = Window:MakeTab({
-    Name = "Teleporte NPC",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Serviço para tweening
-local TweenService = game:GetService("TweenService")
-
--- Definindo as pastas dos NPCs
-local npcFolders = {
-    game:GetService("Workspace")["Npc's"],
-    game:GetService("Workspace")["Npc's_2"]
-}
-
--- Cor alvo para verificação (RGB: 255, 85, 0)
-local targetColor = Color3.fromRGB(255, 85, 0)
-
--- Variável para contar a quantidade de NPCs com a condição desejada
-local npcCount = 0
-local validNPCs = {}  -- Tabela para armazenar os NPCs que atendem aos requisitos
-
--- Função para verificar se um NPC possui NameTitle dentro de QuestTag e a cor desejada
-local function checkNameTitleWithColor(npc)
-    local success, result = pcall(function()
-        local nameTitle = npc:FindFirstChild("Head"):FindFirstChild("QuestTag"):FindFirstChild("NameTitle")
-        if nameTitle and nameTitle:IsA("TextLabel") then
-            return nameTitle.TextColor3 == targetColor
-        elseif nameTitle and nameTitle:IsA("Frame") then
-            return nameTitle.BackgroundColor3 == targetColor
-        end
-    end)
-    return success and result or false
-end
-
--- Função para iterar por todos os NPCs nas pastas especificadas e atualizar o contador
-local function detectNPCsAndCount()
-    npcCount = 0  -- Reseta a contagem inicial
-    validNPCs = {}  -- Reseta a lista de NPCs válidos
-
-    for _, folder in pairs(npcFolders) do
-        -- Verifica se a pasta existe
-        if folder then
-            -- Itera por cada NPC na pasta
-            for _, npc in pairs(folder:GetChildren()) do
-                -- Verifica se é um modelo e se possui a tag 'NameTitle' com a cor especificada
-                if npc:IsA("Model") and checkNameTitleWithColor(npc) then
-                    npcCount = npcCount + 1  -- Incrementa a contagem
-                    table.insert(validNPCs, npc)  -- Adiciona o NPC à lista de NPCs válidos
-                end
-            end
+-- Função para verificar se um NPC possui o `QuestTag.NameTitle` com a cor especificada
+local function checkNpcColor(npc)
+    local head = npc:FindFirstChild("Head")
+    if head and head:FindFirstChild("QuestTag") and head.QuestTag:FindFirstChild("NameTitle") then
+        local nameTitle = head.QuestTag.NameTitle
+        if nameTitle.TextColor3 == targetColor then
+            return true
         end
     end
-    return npcCount
+    return false
 end
 
--- Função para teleportar suavemente para um NPC
-local function smoothTeleport(player, targetPosition)
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local humanoidRootPart = character.HumanoidRootPart
+-- Cria uma lista para armazenar NPCs detectados
+local detectedNpcs = {}
 
-        -- Define a propriedade de Tween (posição final)
-        local tweenInfo = TweenInfo.new(
-            1,  -- Duração: 1 segundo para completar o teleporte
-            Enum.EasingStyle.Linear,  -- Estilo de interpolação linear
-            Enum.EasingDirection.InOut,  -- Direção
-            0,  -- Repetições: 0 (não repete)
-            false,  -- Reverso: false (não reverte)
-            0  -- Atraso: 0 segundos
-        )
-
-        -- Cria o Tween com a posição alvo
-        local tweenGoal = { CFrame = CFrame.new(targetPosition) }
-        local tween = TweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
-
-        -- Inicia o Tween
-        tween:Play()
+-- Percorre todos os NPCs em `workspace["Npc's"]`
+for _, npc in pairs(game:GetService("Workspace")["Npc's"]:GetChildren()) do
+    if checkNpcColor(npc) then
+        table.insert(detectedNpcs, npc)
+        print("NPC com cor laranja detectado: " .. npc.Name)
     end
 end
 
--- Função para teleportar para cada NPC válido suavemente
-local function teleportToValidNPCs()
-    local player = game.Players.LocalPlayer
-    for _, npc in pairs(validNPCs) do
-        -- Verifica se o NPC possui um PrimaryPart para teleporte
-        if npc.PrimaryPart then
-            -- Calcula a posição alvo acima do NPC
-            local targetPosition = npc.PrimaryPart.Position + Vector3.new(0, 5, 0)  -- Adiciona 5 unidades de altura para evitar sobreposição
-
-            -- Realiza o teleporte suave para a posição alvo
-            smoothTeleport(player, targetPosition)
-            wait(1.5)  -- Espera 1,5 segundos para completar o Tween antes de mover para o próximo NPC
-        end
-    end
+-- Se desejar, você pode fazer algo com a lista de NPCs detectados
+if #detectedNpcs > 0 then
+    -- Por exemplo, exibir um aviso na interface do Orion
+    OrionLib:MakeNotification({
+        Name = "NPCs Detectados",
+        Content = "Foram encontrados " .. #detectedNpcs .. " NPCs com a cor laranja.",
+        Time = 5
+    })
 end
-
--- Botão para contar os NPCs válidos e mostrar a quantidade
-MainTab:AddButton({
-    Name = "Contar NPCs Válidos",
-    Callback = function()
-        -- Atualiza a contagem de NPCs válidos
-        local count = detectNPCsAndCount()
-        -- Exibe a contagem no console (pode ser adaptado para GUI dentro do Orion)
-        print("Quantidade de NPCs com a cor desejada: " .. count)
-        -- Mensagem na Orion para notificar
-        OrionLib:MakeNotification({
-            Name = "Contagem NPCs",
-            Content = "Quantidade de NPCs válidos: " .. count,
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-    end    
-})
-
--- Botão para teleportar para NPCs válidos
-MainTab:AddButton({
-    Name = "Teleportar para NPCs",
-    Callback = function()
-        -- Executa o teleporte para os NPCs válidos
-        teleportToValidNPCs()
-    end
-})
-
--- Inicializa a interface
-OrionLib:Init()
