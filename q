@@ -34,25 +34,15 @@ local validNPCs = {}  -- Tabela para armazenar os NPCs que atendem aos requisito
 
 -- Função para verificar se um NPC possui NameTitle dentro de QuestTag e a cor desejada
 local function checkNameTitleWithColor(npc)
-    -- Verifica se o NPC possui um objeto chamado 'Head'
-    local head = npc:FindFirstChild("Head")
-    if head then
-        -- Verifica se 'Head' possui um objeto chamado 'QuestTag'
-        local questTag = head:FindFirstChild("QuestTag")
-        if questTag then
-            -- Verifica se 'QuestTag' possui um objeto chamado 'NameTitle'
-            local nameTitle = questTag:FindFirstChild("NameTitle")
-            if nameTitle then
-                -- Verifica se NameTitle possui a propriedade de cor (exemplo: TextColor3)
-                if nameTitle:IsA("TextLabel") and nameTitle.TextColor3 == targetColor then
-                    return true
-                elseif nameTitle:IsA("Frame") and nameTitle.BackgroundColor3 == targetColor then
-                    return true
-                end
-            end
+    local success, result = pcall(function()
+        local nameTitle = npc:FindFirstChild("Head"):FindFirstChild("QuestTag"):FindFirstChild("NameTitle")
+        if nameTitle and nameTitle:IsA("TextLabel") then
+            return nameTitle.TextColor3 == targetColor
+        elseif nameTitle and nameTitle:IsA("Frame") then
+            return nameTitle.BackgroundColor3 == targetColor
         end
-    end
-    return false
+    end)
+    return success and result or false
 end
 
 -- Função para iterar por todos os NPCs nas pastas especificadas e atualizar o contador
